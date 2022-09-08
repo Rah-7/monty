@@ -1,31 +1,48 @@
 #include "monty.h"
 
-list_t *list_opcode = NULL;
+/* global struct to hold flag for queue and stack length */
+var_t var;
 
 /**
- * main - Main entry point for Stacks and Queues
- * @argc: Argument count for the matrix
- * @argv: Argument vector for the matrix
- * Return: 0 on success or other number if it fails
+ * main - Monty bytecode interpreter
+ * @argc: number of arguments passed
+ * @argv: array of argument strings
+ *
+ * Return: EXIT_SUCCESS on success or EXIT_FAILURE on failure
  */
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
 	stack_t *stack = NULL;
-	list_t *temp;
+	unsigned int line_number = 0;
+	FILE *fs = NULL;
+	char *lineptr = NULL, *op = NULL;
+	size_t n = 0;
 
+	var.queue = 0;
+	var.stack_len = 0;
 	if (argc != 2)
 	{
-		fprintf(stderr, "USAGE: monty file\n");
+		dprintf(STDOUT_FILENO, "USAGE: monty file\n");
 		exit(EXIT_FAILURE);
 	}
-
-	get_file(argv[1]);
-
-	temp = list_opcode;
-
-	for (; temp; temp = temp->next)
-		(*ptr_opcode(temp))(&stack, temp->n);
-
-	free_all(list_opcode, stack);
-	return (0);
+	fs = fopen(argv[1], "r");
+	if (fs == NULL)
+	{
+		dprintf(STDOUT_FILENO, "Error: Can't open file %s\n", argv[1]);
+		exit(EXIT_FAILURE);
+	}
+	on_exit(free_lineptr, &lineptr);
+	on_exit(free_stack, &stack);
+	on_exit(m_fs_close, fs);
+	while (getline(&lineptr, &n, fs) != -1)
+	{
+		line_number++;
+		op = strtok(lineptr, "\n\t\r ");
+		if (op != NULL && op[0] != '#')
+		{
+			get_op(op, &stack, line_number);
+		}
+	}
+	exit(EXIT_SUCCESS);
 }
+
