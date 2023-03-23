@@ -27,7 +27,7 @@ typedef struct stack_s
  * @f: function to handle the opcode
  *
  * Description: opcode and its function
- * for stack, queues, LIFO, FIFO Holberton project
+ * for stack, queues, LIFO, FIFO  project
  */
 typedef struct instruction_s
 {
@@ -72,7 +72,7 @@ void sub(stack_t **stack, unsigned int line_number);
 void mul(stack_t **stack, unsigned int line_number);
 void divide(stack_t **stack, unsigned int line_number);
 void mod(stack_t **stack, unsigned int line_number);
-void f_pchar(stack_t **head, unsigned int counter);
+
 void freeAll(void);
 void freeLinkedList(stack_t *stack);
 #endif
