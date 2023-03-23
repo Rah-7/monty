@@ -1,83 +1,77 @@
 #include "monty.h"
-stack_t *head = NULL;
+
+gbv gv;
 
 /**
- * main - entry point
- * @argc: arguments count
- * @argv: list of arguments
- * Return: always 0
- */
+* main - run the monty compiler
+* @argc: argument count
+* @argv: argument vector
+* Return: always 0
+*/
 
-int main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
+	size_t len = 0;
+	unsigned int line_number = 0;
+	char *value;
+
+	gv.stack = NULL;
+	gv.mfile = NULL;
+	gv.line = NULL;
+	gv.token = NULL;
+
 	if (argc != 2)
+		errorHandler(2, line_number);
+	gv.filename = argv[1];
+	gv.mfile = fopen(argv[1], "r");
+
+	if (!gv.mfile)
+		errorHandler(3, line_number);
+
+	while (getline(&gv.line, &len, gv.mfile) != EOF)
 	{
-		fprintf(stderr, "USAGE: monty file\n");
-		exit(EXIT_FAILURE);
+		line_number++;
+		gv.token = strtok(gv.line, " \t\n");
+
+		if (!gv.token)
+			continue;
+
+		if (strcmp(gv.token, "push") == 0)
+		{
+			value = strtok(NULL, " \t\n");
+
+			if (!value)
+				errorHandler(1, line_number);
+			gv.num = atoi(isNumber(value, line_number));
+		}
+		compare(gv.token, &gv.stack, line_number);
+		free(gv.line);
+		gv.line = NULL;
 	}
-	open_file(argv[1]);
-	free_nodes();
+	freeAll();
 	return (0);
 }
 
 /**
- * create_node - Creates a node.
- * @n: Number to go inside the node.
- * Return: Upon sucess a pointer to the node. Otherwise NULL.
- */
-stack_t *create_node(int n)
+* isNumber - check if a string is numerical
+* @value: string to check
+* @line_number: line of code
+* Return: string, if numerical
+*/
+
+char *isNumber(char *value, unsigned int line_number)
 {
-	stack_t *node;
+	unsigned int i = 0;
 
-	node = malloc(sizeof(stack_t));
-	if (node == NULL)
-		err(4);
-	node->next = NULL;
-	node->prev = NULL;
-	node->n = n;
-	return (node);
-}
+	if ((value[i] < '0' || value[i] > '9') && value[i] != '-')
+		errorHandler(1, line_number);
+	i++;
 
-/**
- * free_nodes - Frees nodes in the stack.
- */
-void free_nodes(void)
-{
-	stack_t *tmp;
-
-	if (head == NULL)
-		return;
-
-	while (head != NULL)
+	while (value[i])
 	{
-		tmp = head;
-		head = head->next;
-		free(tmp);
+		if (value[i] < '0' || value[i] > '9')
+			errorHandler(1, line_number);
+		i++;
 	}
-}
-
-
-/**
- * add_to_queue - Adds a node to the queue.
- * @new_node: Pointer to the new node.
- * @ln: line number of the opcode.
- */
-void add_to_queue(stack_t **new_node, __attribute__((unused))unsigned int ln)
-{
-	stack_t *tmp;
-
-	if (new_node == NULL || *new_node == NULL)
-		exit(EXIT_FAILURE);
-	if (head == NULL)
-	{
-		head = *new_node;
-		return;
-	}
-	tmp = head;
-	while (tmp->next != NULL)
-		tmp = tmp->next;
-
-	tmp->next = *new_node;
-	(*new_node)->prev = tmp;
-
+	return (value);
 }
